@@ -1,7 +1,7 @@
 <img src="https://capsule-render.vercel.app/api?type=waving&color=0:6f42c1,50:a371f7,100:2f81f7&height=180&section=header&text=Ullekh%20Patel&fontSize=52&fontColor=ffffff&animation=fadeIn&fontAlignY=34" width="100%" alt="" />
 
 <p align="center">
-  <img src="https://readme-typing-svg.demolab.com/?font=Fira+Code&weight=600&size=22&pause=1000&color=A371F7&center=true&vCenter=true&width=600&lines=Machine+Learning+%26+NLP+Engineer;Turning+messy+text+into+something+useful" alt="" />
+  <img src="https://readme-typing-svg.demolab.com/?font=Fira+Code&weight=600&size=22&pause=1000&color=A371F7&center=true&vCenter=true&width=600&lines=AI+%26+ML+Engineer;Building+agentic+AI+systems" alt="" />
 </p>
 
 <br />
