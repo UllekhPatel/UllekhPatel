@@ -11,6 +11,7 @@ import subprocess
 from pathlib import Path
 
 USER = "UllekhPatel"
+SELF_REPO = "UllekhPatel"  # the profile repo itself; its commits are excluded
 OUT = Path(__file__).resolve().parent.parent / "assets"
 SNAPSHOT = OUT / "snapshot.json"
 
@@ -45,12 +46,45 @@ def load_snapshot():
     return {}
 
 
+def self_repo_commits():
+    """Commits the user authored in the profile repo, keyed by YYYY-MM-DD.
+
+    These are excluded everywhere: maintaining the card shouldn't inflate the
+    number the card reports. Commits made by github-actions[bot] are already
+    excluded by GitHub, which attributes them to the bot, not the user."""
+    by_day = {}
+    cursor, page = "null", 0
+    while page < 10:
+        q = (
+            '{ repository(owner:"%s", name:"%s"){ defaultBranchRef{ target{ '
+            "... on Commit { history(first:100, after:%s){ pageInfo{ hasNextPage endCursor } "
+            "nodes{ committedDate author{ user{ login } } } } } } } } }"
+        ) % (USER, SELF_REPO, cursor)
+        r = gh_graphql(q)["repository"]["defaultBranchRef"]
+        if not r:
+            break
+        h = r["target"]["history"]
+        for n in h["nodes"]:
+            u = (n.get("author") or {}).get("user") or {}
+            if u.get("login") == USER:
+                d = n["committedDate"][:10]
+                by_day[d] = by_day.get(d, 0) + 1
+        if not h["pageInfo"]["hasNextPage"]:
+            break
+        cursor = '"%s"' % h["pageInfo"]["endCursor"]
+        page += 1
+    return by_day
+
+
 def fetch_data():
     """Total contributions already include private activity, because the
     account exposes private contributions on its profile - so a repo-scoped
     Action token reads the same number the owner does. Language bytes need
     private *repo* access, which no such token has, hence the snapshot."""
     snap = load_snapshot()
+
+    self_days = self_repo_commits()
+    self_total = sum(self_days.values())
 
     total = 0
     for y in range(2022, 2027):
@@ -61,15 +95,18 @@ def fetch_data():
         ) % (USER, y, y)
         c = gh_graphql(q)["user"]["contributionsCollection"]
         total += c["contributionCalendar"]["totalContributions"]
+        total -= sum(n for d, n in self_days.items() if d.startswith(str(y)))
 
     langs_raw = gh_graphql(
         '{ user(login:"%s"){ repositories(first:100, '
-        "ownerAffiliations:[OWNER]){ nodes{ languages(first:10){ "
+        "ownerAffiliations:[OWNER]){ nodes{ name languages(first:10){ "
         "edges{ size node{name} } } } } } }" % USER
     )["user"]["repositories"]["nodes"]
 
     totals = {}
     for repo in langs_raw:
+        if repo["name"] == SELF_REPO:   # don't let this repo's own script count
+            continue
         for e in repo["languages"]["edges"]:
             totals[e["node"]["name"]] = totals.get(e["node"]["name"], 0) + e["size"]
     langs = sorted(totals.items(), key=lambda kv: -kv[1])[:6]
@@ -83,11 +120,18 @@ def fetch_data():
         "totalContributions weeks{ contributionDays{ contributionCount date } } "
         "} } } }" % USER
     )["user"]["contributionsCollection"]["contributionCalendar"]
-    weeks = [sum(d["contributionCount"] for d in w["contributionDays"])
-             for w in cal["weeks"]]
+    weeks, year_self = [], 0
+    for w in cal["weeks"]:
+        wk = 0
+        for day in w["contributionDays"]:
+            adj = max(day["contributionCount"] - self_days.get(day["date"], 0), 0)
+            year_self += day["contributionCount"] - adj
+            wk += adj
+        weeks.append(wk)
 
     return {"total": total, "langs": langs,
-            "year_total": cal["totalContributions"], "weeks": weeks}
+            "year_total": cal["totalContributions"] - year_self,
+            "weeks": weeks, "excluded": self_total}
 
 
 W = 880   # one compact band: contributions on the left, languages on the right
@@ -223,7 +267,8 @@ def main():
     (OUT / "stats.svg").write_text(card(d))
     (OUT / "graph.svg").write_text(graph_card(d))
     print(f"all_time={d['total']:,} last_year={d['year_total']:,} "
-          f"weeks={len(d['weeks'])} langs={len(d['langs'])}")
+          f"weeks={len(d['weeks'])} langs={len(d['langs'])} "
+          f"excluded_self_commits={d['excluded']}")
 
 
 if __name__ == "__main__":
