@@ -13,7 +13,7 @@
 </p>
 
 <p align="center">
-  <img width="84%" src="https://raw.githubusercontent.com/UllekhPatel/UllekhPatel/main/assets/graph.svg?v=f7f26ccf" alt="Weekly contributions over the last 12 months" />
+  <img width="84%" src="https://raw.githubusercontent.com/UllekhPatel/UllekhPatel/main/assets/graph.svg?v=b9603b20" alt="Weekly contributions over the last 12 months" />
 </p>
 
 <p align="center">
