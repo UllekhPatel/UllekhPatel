@@ -46,29 +46,21 @@ def load_snapshot():
 
 
 def fetch_data():
-    """Commit counts (public + private) are readable by any token because the
-    account has 'include private contributions on my profile' enabled. Repo
-    count and language bytes are NOT: a repo-scoped token sees public repos
-    only, so those fall back to the committed snapshot."""
+    """Total contributions already include private activity, because the
+    account exposes private contributions on its profile - so a repo-scoped
+    Action token reads the same number the owner does. Language bytes need
+    private *repo* access, which no such token has, hence the snapshot."""
     snap = load_snapshot()
-    commits_public = commits_private = prs_year = 0
+
+    total = 0
     for y in range(2022, 2027):
         q = (
             '{ user(login:"%s"){ contributionsCollection('
             'from:"%d-01-01T00:00:00Z", to:"%d-12-31T23:59:59Z"){ '
-            "totalCommitContributions restrictedContributionsCount "
-            "totalPullRequestContributions } } }"
+            "contributionCalendar{totalContributions} } } }"
         ) % (USER, y, y)
         c = gh_graphql(q)["user"]["contributionsCollection"]
-        commits_public += c["totalCommitContributions"]
-        commits_private += c["restrictedContributionsCount"]
-        prs_year += c["totalPullRequestContributions"]
-
-    u = gh_graphql(
-        '{ user(login:"%s"){ followers{totalCount} '
-        "repositories(ownerAffiliations:[OWNER]){totalCount} "
-        "pullRequests{totalCount} } }" % USER
-    )["user"]
+        total += c["contributionCalendar"]["totalContributions"]
 
     langs_raw = gh_graphql(
         '{ user(login:"%s"){ repositories(first:100, '
@@ -82,104 +74,104 @@ def fetch_data():
             totals[e["node"]["name"]] = totals.get(e["node"]["name"], 0) + e["size"]
     langs = sorted(totals.items(), key=lambda kv: -kv[1])[:6]
 
-    # Keep whichever view is richer: an owner-authenticated run sees private
-    # repos and beats the snapshot; a tokenless Action run does not.
-    repos = max(u["repositories"]["totalCount"], snap.get("repos", 0))
-    prs = max(u["pullRequests"]["totalCount"], snap.get("prs", 0))
     snap_langs = [tuple(x) for x in snap.get("langs", [])]
-    if sum(s for _, s in snap_langs) > sum(s for _, s in langs):
+    if sum(v for _, v in snap_langs) > sum(v for _, v in langs):
         langs = snap_langs
 
-    return {
-        "commits_total": commits_public + commits_private,
-        "commits_private": commits_private,
-        "commits_public": commits_public,
-        "prs": prs,
-        "repos": repos,
-        "followers": u["followers"]["totalCount"],
-        "langs": langs,
-    }
+    return {"total": total, "langs": langs}
+
+
+W = 880  # both cards are full-width horizontal bands
+PAD = 28
+
+
+def text_w(s, size, weight=400):
+    """Approximate rendered width in px for the Segoe UI stack. Deliberately
+    generous so layout errs toward whitespace rather than overflow."""
+    factor = 0.62 if weight >= 600 else 0.55
+    return len(str(s)) * size * factor
 
 
 def stats_card(d):
-    rows = [
-        ("Total Commits", f"{d['commits_total']:,}", True),
-        ("Private Commits", f"{d['commits_private']:,}", False),
-        ("Public Commits", f"{d['commits_public']:,}", False),
-        ("Pull Requests", f"{d['prs']:,}", False),
-    ]
-    h = CARD_H
-    parts = []
-    for i, (label, value, hero) in enumerate(rows):
-        y = 78 + i * 34
-        size = 19 if hero else 15
-        color = ACCENT if hero else TEXT
-        weight = 700 if hero else 500
-        parts.append(
-            f'<g class="row" style="animation-delay:{0.12 * i + 0.2:.2f}s">'
-            f'<text x="26" y="{y}" class="lbl">{label}</text>'
-            f'<text x="434" y="{y}" text-anchor="end" '
-            f'style="font-size:{size}px;font-weight:{weight};fill:{color}">{value}</text>'
-            f'<rect x="26" y="{y + 8}" width="408" height="1" fill="{BORDER}" opacity="0.5"/>'
-            "</g>"
-        )
-    return f"""<svg xmlns="http://www.w3.org/2000/svg" width="460" height="{h}" viewBox="0 0 460 {h}" role="img" aria-label="All-time GitHub stats including private repositories">
+    h = 118
+    num = f"{d['total']:,}"
+    num_size = 54
+    # Shrink the headline until it and its label comfortably fit the band.
+    label = "TOTAL CONTRIBUTIONS"
+    label_size = 15
+    while text_w(num, num_size, 700) + 24 + text_w(label, label_size, 600) > W - 2 * PAD:
+        num_size -= 2
+    num_w = text_w(num, num_size, 700)
+    return f"""<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{h}" viewBox="0 0 {W} {h}" role="img" aria-label="Total contributions: {num}">
 <style>
   text {{ font-family: 'Segoe UI', Ubuntu, Helvetica, sans-serif; }}
-  .title {{ font-size: 17px; font-weight: 700; fill: {ACCENT}; }}
-  .sub {{ font-size: 11px; fill: {MUTED}; }}
-  .lbl {{ font-size: 14px; fill: {TEXT}; }}
-  .row {{ opacity: 0; animation: rise 0.6s ease-out forwards; }}
-  @keyframes rise {{ from {{ opacity: 0; transform: translateY(8px); }}
+  .num {{ font-size: {num_size}px; font-weight: 700; fill: {ACCENT}; }}
+  .lab {{ font-size: {label_size}px; font-weight: 600; fill: {TEXT}; letter-spacing: 1.5px; }}
+  .sub {{ font-size: 12px; fill: {MUTED}; }}
+  .fx {{ opacity: 0; animation: rise .7s ease-out .15s forwards; }}
+  @keyframes rise {{ from {{ opacity: 0; transform: translateY(10px); }}
                      to {{ opacity: 1; transform: translateY(0); }} }}
 </style>
-<rect x="0.5" y="0.5" width="459" height="{h - 1}" rx="12" fill="{BG}" stroke="{BORDER}"/>
-<text x="26" y="34" class="title">All-Time Stats</text>
-<text x="26" y="50" class="sub">public + private repositories</text>
-{"".join(parts)}
+<rect x="0.5" y="0.5" width="{W - 1}" height="{h - 1}" rx="12" fill="{BG}" stroke="{BORDER}"/>
+<g class="fx">
+  <text x="{PAD}" y="74" class="num">{num}</text>
+  <text x="{PAD + num_w + 24}" y="62" class="lab">{label}</text>
+  <text x="{PAD + num_w + 24}" y="82" class="sub">public + private &#183; since 2022</text>
+</g>
 </svg>"""
 
 
 def langs_card(d):
-    total = sum(s for _, s in d["langs"])
-    h = CARD_H
-    bars, x = [], 26.0
-    seg = []
-    for name, size in d["langs"]:
-        w = (size / total) * 408
-        seg.append(f'<rect x="{x:.1f}" y="62" width="{w:.1f}" height="10" '
-                   f'fill="{LANG_COLORS.get(name, ACCENT)}"/>')
+    h = 132
+    total = sum(v for _, v in d["langs"])
+    inner = W - 2 * PAD
+
+    # Drop trailing languages until the single-row legend fits the width.
+    langs = list(d["langs"])
+    fs, gap, dot = 13, 26, 16
+    def legend_w(items):
+        return sum(dot + text_w(n, fs) + text_w(" 00.0%", fs, 600) for n, _ in items) \
+               + gap * max(len(items) - 1, 0)
+    while len(langs) > 2 and legend_w(langs) > inner:
+        langs.pop()
+
+    seg, x = [], float(PAD)
+    for n, v in langs:
+        w = (v / sum(k for _, k in langs)) * inner
+        seg.append(f'<rect x="{x:.1f}" y="56" width="{w:.1f}" height="12" '
+                   f'fill="{LANG_COLORS.get(n, ACCENT)}"/>')
         x += w
-    for i, (name, size) in enumerate(d["langs"]):
-        y = 104 + i * 30
-        pct = size / total * 100
-        c = LANG_COLORS.get(name, ACCENT)
-        bars.append(
-            f'<g class="row" style="animation-delay:{0.1 * i + 0.3:.2f}s">'
-            f'<circle cx="32" cy="{y - 4}" r="5" fill="{c}"/>'
-            f'<text x="48" y="{y}" class="lbl">{name}</text>'
-            f'<text x="434" y="{y}" text-anchor="end" class="pct">{pct:.1f}%</text>'
+
+    items, lx = [], float(PAD)
+    for i, (n, v) in enumerate(langs):
+        pct = v / sum(k for _, k in langs) * 100
+        c = LANG_COLORS.get(n, ACCENT)
+        items.append(
+            f'<g class="fx" style="animation-delay:{0.07 * i + 0.35:.2f}s">'
+            f'<circle cx="{lx + 5:.1f}" cy="98" r="5" fill="{c}"/>'
+            f'<text x="{lx + dot:.1f}" y="103" class="lab">{n}</text>'
+            f'<text x="{lx + dot + text_w(n, fs) + 6:.1f}" y="103" class="pct">{pct:.1f}%</text>'
             "</g>"
         )
-    return f"""<svg xmlns="http://www.w3.org/2000/svg" width="460" height="{h}" viewBox="0 0 460 {h}" role="img" aria-label="Top languages across all repositories including private">
+        lx += dot + text_w(n, fs) + text_w(" 00.0%", fs, 600) + gap
+
+    return f"""<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{h}" viewBox="0 0 {W} {h}" role="img" aria-label="Top languages across all repositories">
 <style>
   text {{ font-family: 'Segoe UI', Ubuntu, Helvetica, sans-serif; }}
-  .title {{ font-size: 17px; font-weight: 700; fill: {ACCENT}; }}
-  .sub {{ font-size: 11px; fill: {MUTED}; }}
-  .lbl {{ font-size: 14px; fill: {TEXT}; }}
-  .pct {{ font-size: 13px; fill: {MUTED}; font-weight: 600; }}
-  .row {{ opacity: 0; animation: rise 0.6s ease-out forwards; }}
-  #bar {{ animation: grow 1.1s cubic-bezier(.4,0,.2,1) forwards; transform-origin: 26px 0; }}
+  .ttl {{ font-size: 16px; font-weight: 700; fill: {ACCENT}; }}
+  .lab {{ font-size: {fs}px; fill: {TEXT}; }}
+  .pct {{ font-size: {fs}px; font-weight: 600; fill: {MUTED}; }}
+  .fx {{ opacity: 0; animation: rise .6s ease-out forwards; }}
+  #bar {{ animation: grow 1.1s cubic-bezier(.4,0,.2,1) forwards; transform-origin: {PAD}px 0; }}
   @keyframes rise {{ from {{ opacity: 0; transform: translateY(8px); }}
                      to {{ opacity: 1; transform: translateY(0); }} }}
   @keyframes grow {{ from {{ transform: scaleX(0); }} to {{ transform: scaleX(1); }} }}
 </style>
-<rect x="0.5" y="0.5" width="459" height="{h - 1}" rx="12" fill="{BG}" stroke="{BORDER}"/>
-<text x="26" y="34" class="title">Top Languages</text>
-<text x="26" y="50" class="sub">across all repositories, by bytes of code</text>
-<clipPath id="r"><rect x="26" y="62" width="408" height="10" rx="5"/></clipPath>
+<rect x="0.5" y="0.5" width="{W - 1}" height="{h - 1}" rx="12" fill="{BG}" stroke="{BORDER}"/>
+<text x="{PAD}" y="36" class="ttl">Languages</text>
+<clipPath id="r"><rect x="{PAD}" y="56" width="{inner}" height="12" rx="6"/></clipPath>
 <g clip-path="url(#r)" id="bar">{"".join(seg)}</g>
-{"".join(bars)}
+{"".join(items)}
 </svg>"""
 
 
@@ -187,13 +179,12 @@ def main():
     OUT.mkdir(parents=True, exist_ok=True)
     d = fetch_data()
     # Persist the owner-only view so tokenless Action runs can reuse it.
-    SNAPSHOT.write_text(json.dumps(
-        {"repos": d["repos"], "prs": d["prs"],
-         "langs": [list(x) for x in d["langs"]]}, indent=2) + "\n")
+    if len(d["langs"]) >= len(load_snapshot().get("langs", [])):
+        SNAPSHOT.write_text(json.dumps(
+            {"langs": [list(x) for x in d["langs"]]}, indent=2) + "\n")
     (OUT / "stats.svg").write_text(stats_card(d))
     (OUT / "languages.svg").write_text(langs_card(d))
-    print(f"commits={d['commits_total']:,} (private={d['commits_private']:,}) "
-          f"prs={d['prs']} repos={d['repos']}")
+    print(f"total_contributions={d['total']:,} langs={len(d['langs'])}")
 
 
 if __name__ == "__main__":

@@ -1,15 +1,17 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="460" height="250" viewBox="0 0 460 250" role="img" aria-label="All-time GitHub stats including private repositories">
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="118" viewBox="0 0 880 118" role="img" aria-label="Total contributions: 1,599">
 <style>
   text { font-family: 'Segoe UI', Ubuntu, Helvetica, sans-serif; }
-  .title { font-size: 17px; font-weight: 700; fill: #a371f7; }
-  .sub { font-size: 11px; fill: #8b949e; }
-  .lbl { font-size: 14px; fill: #c9d1d9; }
-  .row { opacity: 0; animation: rise 0.6s ease-out forwards; }
-  @keyframes rise { from { opacity: 0; transform: translateY(8px); }
+  .num { font-size: 54px; font-weight: 700; fill: #a371f7; }
+  .lab { font-size: 15px; font-weight: 600; fill: #c9d1d9; letter-spacing: 1.5px; }
+  .sub { font-size: 12px; fill: #8b949e; }
+  .fx { opacity: 0; animation: rise .7s ease-out .15s forwards; }
+  @keyframes rise { from { opacity: 0; transform: translateY(10px); }
                      to { opacity: 1; transform: translateY(0); } }
 </style>
-<rect x="0.5" y="0.5" width="459" height="249" rx="12" fill="#0d1117" stroke="#30363d"/>
-<text x="26" y="34" class="title">All-Time Stats</text>
-<text x="26" y="50" class="sub">public + private repositories</text>
-<g class="row" style="animation-delay:0.20s"><text x="26" y="78" class="lbl">Total Commits</text><text x="434" y="78" text-anchor="end" style="font-size:19px;font-weight:700;fill:#a371f7">1,590</text><rect x="26" y="86" width="408" height="1" fill="#30363d" opacity="0.5"/></g><g class="row" style="animation-delay:0.32s"><text x="26" y="112" class="lbl">Private Commits</text><text x="434" y="112" text-anchor="end" style="font-size:15px;font-weight:500;fill:#c9d1d9">1,566</text><rect x="26" y="120" width="408" height="1" fill="#30363d" opacity="0.5"/></g><g class="row" style="animation-delay:0.44s"><text x="26" y="146" class="lbl">Public Commits</text><text x="434" y="146" text-anchor="end" style="font-size:15px;font-weight:500;fill:#c9d1d9">24</text><rect x="26" y="154" width="408" height="1" fill="#30363d" opacity="0.5"/></g><g class="row" style="animation-delay:0.56s"><text x="26" y="180" class="lbl">Pull Requests</text><text x="434" y="180" text-anchor="end" style="font-size:15px;font-weight:500;fill:#c9d1d9">140</text><rect x="26" y="188" width="408" height="1" fill="#30363d" opacity="0.5"/></g>
+<rect x="0.5" y="0.5" width="879" height="117" rx="12" fill="#0d1117" stroke="#30363d"/>
+<g class="fx">
+  <text x="28" y="74" class="num">1,599</text>
+  <text x="219.4" y="62" class="lab">TOTAL CONTRIBUTIONS</text>
+  <text x="219.4" y="82" class="sub">public + private &#183; since 2022</text>
+</g>
 </svg>
