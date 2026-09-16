@@ -1,17 +1,27 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="880" height="118" viewBox="0 0 880 118" role="img" aria-label="Total contributions: 1,601">
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="96" viewBox="0 0 880 96" role="img" aria-label="Total contributions 1,601; top languages across all repositories">
 <style>
   text { font-family: 'Segoe UI', Ubuntu, Helvetica, sans-serif; }
-  .num { font-size: 54px; font-weight: 700; fill: #a371f7; }
-  .lab { font-size: 15px; font-weight: 600; fill: #c9d1d9; letter-spacing: 1.5px; }
-  .sub { font-size: 12px; fill: #8b949e; }
-  .fx { opacity: 0; animation: rise .7s ease-out .15s forwards; }
-  @keyframes rise { from { opacity: 0; transform: translateY(10px); }
-                     to { opacity: 1; transform: translateY(0); } }
+  .num { font-size: 34px; font-weight: 700; fill: #a371f7; }
+  .cap { font-size: 10px; font-weight: 600; fill: #c9d1d9; letter-spacing: 1.2px; }
+  .sub { font-size: 9px; fill: #8b949e; }
+  .lg  { font-size: 11px; fill: #c9d1d9; }
+  .pc  { font-size: 11px; font-weight: 600; fill: #8b949e; }
+  .ttl { font-size: 10px; font-weight: 600; fill: #8b949e; letter-spacing: 1.2px; }
+  .fx  { opacity: 0; animation: rise .55s ease-out forwards; }
+  #bar { animation: grow 1s cubic-bezier(.4,0,.2,1) forwards; transform-origin: 250px 0; }
+  @keyframes rise { from { opacity:0; transform: translateY(6px); }
+                     to { opacity:1; transform: translateY(0); } }
+  @keyframes grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 </style>
-<rect x="0.5" y="0.5" width="879" height="117" rx="12" fill="#0d1117" stroke="#30363d"/>
+<rect x="0.5" y="0.5" width="879" height="95" rx="10" fill="#0d1117" stroke="#30363d"/>
 <g class="fx">
-  <text x="28" y="74" class="num">1,601</text>
-  <text x="219.4" y="62" class="lab">TOTAL CONTRIBUTIONS</text>
-  <text x="219.4" y="82" class="sub">public + private &#183; since 2022</text>
+  <text x="24" y="48" class="num">1,601</text>
+  <text x="24" y="66" class="cap">TOTAL CONTRIBUTIONS</text>
+  <text x="24" y="80" class="sub">public + private &#183; since 2022</text>
 </g>
+<line x1="228" y1="20" x2="228" y2="76" stroke="#30363d"/>
+<text x="250" y="24" class="ttl">LANGUAGES</text>
+<clipPath id="r"><rect x="250" y="34" width="606" height="9" rx="4.5"/></clipPath>
+<g clip-path="url(#r)" id="bar"><rect x="250.0" y="34" width="240.4" height="9" fill="#3178c6"/><rect x="490.4" y="34" width="121.6" height="9" fill="#3572A5"/><rect x="612.0" y="34" width="88.4" height="9" fill="#f1e05a"/><rect x="700.5" y="34" width="86.9" height="9" fill="#DA5B0B"/><rect x="787.4" y="34" width="61.9" height="9" fill="#00ADD8"/><rect x="849.3" y="34" width="6.7" height="9" fill="#e34c26"/></g>
+<g class="fx" style="animation-delay:0.30s"><circle cx="254.0" cy="66" r="4" fill="#3178c6"/><text x="263.0" y="70" class="lg">TypeScript</text><text x="328.5" y="70" class="pc">40%</text></g><g class="fx" style="animation-delay:0.36s"><circle cx="368.8" cy="66" r="4" fill="#3572A5"/><text x="377.8" y="70" class="lg">Python</text><text x="419.1" y="70" class="pc">20%</text></g><g class="fx" style="animation-delay:0.42s"><circle cx="459.4" cy="66" r="4" fill="#f1e05a"/><text x="468.4" y="70" class="lg">JavaScript</text><text x="533.9" y="70" class="pc">15%</text></g><g class="fx" style="animation-delay:0.48s"><circle cx="574.1" cy="66" r="4" fill="#DA5B0B"/><text x="583.1" y="70" class="lg">Jupyter Notebook</text><text x="684.9" y="70" class="pc">14%</text></g><g class="fx" style="animation-delay:0.54s"><circle cx="725.2" cy="66" r="4" fill="#00ADD8"/><text x="734.2" y="70" class="lg">Go</text><text x="751.3" y="70" class="pc">10%</text></g><g class="fx" style="animation-delay:0.60s"><circle cx="791.6" cy="66" r="4" fill="#e34c26"/><text x="800.6" y="70" class="lg">HTML</text><text x="829.8" y="70" class="pc">1%</text></g>
 </svg>

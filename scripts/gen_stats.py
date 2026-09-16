@@ -81,95 +81,79 @@ def fetch_data():
     return {"total": total, "langs": langs}
 
 
-W = 880  # both cards are full-width horizontal bands
-PAD = 28
+W = 880   # one compact band: contributions on the left, languages on the right
+H = 96
+PAD = 24
+SPLIT = 250  # x where the language block starts
 
 
 def text_w(s, size, weight=400):
     """Approximate rendered width in px for the Segoe UI stack. Deliberately
     generous so layout errs toward whitespace rather than overflow."""
-    factor = 0.62 if weight >= 600 else 0.55
-    return len(str(s)) * size * factor
+    return len(str(s)) * size * (0.62 if weight >= 600 else 0.55)
 
 
-def stats_card(d):
-    h = 118
+def card(d):
     num = f"{d['total']:,}"
-    num_size = 54
-    # Shrink the headline until it and its label comfortably fit the band.
-    label = "TOTAL CONTRIBUTIONS"
-    label_size = 15
-    while text_w(num, num_size, 700) + 24 + text_w(label, label_size, 600) > W - 2 * PAD:
+    num_size = 34
+    while text_w(num, num_size, 700) > SPLIT - PAD - 16:
         num_size -= 2
-    num_w = text_w(num, num_size, 700)
-    return f"""<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{h}" viewBox="0 0 {W} {h}" role="img" aria-label="Total contributions: {num}">
-<style>
-  text {{ font-family: 'Segoe UI', Ubuntu, Helvetica, sans-serif; }}
-  .num {{ font-size: {num_size}px; font-weight: 700; fill: {ACCENT}; }}
-  .lab {{ font-size: {label_size}px; font-weight: 600; fill: {TEXT}; letter-spacing: 1.5px; }}
-  .sub {{ font-size: 12px; fill: {MUTED}; }}
-  .fx {{ opacity: 0; animation: rise .7s ease-out .15s forwards; }}
-  @keyframes rise {{ from {{ opacity: 0; transform: translateY(10px); }}
-                     to {{ opacity: 1; transform: translateY(0); }} }}
-</style>
-<rect x="0.5" y="0.5" width="{W - 1}" height="{h - 1}" rx="12" fill="{BG}" stroke="{BORDER}"/>
-<g class="fx">
-  <text x="{PAD}" y="74" class="num">{num}</text>
-  <text x="{PAD + num_w + 24}" y="62" class="lab">{label}</text>
-  <text x="{PAD + num_w + 24}" y="82" class="sub">public + private &#183; since 2022</text>
-</g>
-</svg>"""
 
-
-def langs_card(d):
-    h = 132
-    total = sum(v for _, v in d["langs"])
-    inner = W - 2 * PAD
-
-    # Drop trailing languages until the single-row legend fits the width.
+    inner = W - SPLIT - PAD          # width available to the language block
     langs = list(d["langs"])
-    fs, gap, dot = 13, 26, 16
+    fs, dot, gap = 11, 13, 14
+
     def legend_w(items):
-        return sum(dot + text_w(n, fs) + text_w(" 00.0%", fs, 600) for n, _ in items) \
+        return sum(dot + text_w(n, fs) + text_w(" 00%", fs, 600) for n, _ in items) \
                + gap * max(len(items) - 1, 0)
+
     while len(langs) > 2 and legend_w(langs) > inner:
         langs.pop()
 
-    seg, x = [], float(PAD)
+    tot = sum(v for _, v in langs)
+    seg, x = [], float(SPLIT)
     for n, v in langs:
-        w = (v / sum(k for _, k in langs)) * inner
-        seg.append(f'<rect x="{x:.1f}" y="56" width="{w:.1f}" height="12" '
+        w = (v / tot) * inner
+        seg.append(f'<rect x="{x:.1f}" y="34" width="{w:.1f}" height="9" '
                    f'fill="{LANG_COLORS.get(n, ACCENT)}"/>')
         x += w
 
-    items, lx = [], float(PAD)
+    items, lx = [], float(SPLIT)
     for i, (n, v) in enumerate(langs):
-        pct = v / sum(k for _, k in langs) * 100
         c = LANG_COLORS.get(n, ACCENT)
         items.append(
-            f'<g class="fx" style="animation-delay:{0.07 * i + 0.35:.2f}s">'
-            f'<circle cx="{lx + 5:.1f}" cy="98" r="5" fill="{c}"/>'
-            f'<text x="{lx + dot:.1f}" y="103" class="lab">{n}</text>'
-            f'<text x="{lx + dot + text_w(n, fs) + 6:.1f}" y="103" class="pct">{pct:.1f}%</text>'
-            "</g>"
+            f'<g class="fx" style="animation-delay:{0.06 * i + 0.3:.2f}s">'
+            f'<circle cx="{lx + 4:.1f}" cy="66" r="4" fill="{c}"/>'
+            f'<text x="{lx + dot:.1f}" y="70" class="lg">{n}</text>'
+            f'<text x="{lx + dot + text_w(n, fs) + 5:.1f}" y="70" class="pc">'
+            f'{v / tot * 100:.0f}%</text></g>'
         )
-        lx += dot + text_w(n, fs) + text_w(" 00.0%", fs, 600) + gap
+        lx += dot + text_w(n, fs) + text_w(" 00%", fs, 600) + gap
 
-    return f"""<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{h}" viewBox="0 0 {W} {h}" role="img" aria-label="Top languages across all repositories">
+    return f"""<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" viewBox="0 0 {W} {H}" role="img" aria-label="Total contributions {num}; top languages across all repositories">
 <style>
   text {{ font-family: 'Segoe UI', Ubuntu, Helvetica, sans-serif; }}
-  .ttl {{ font-size: 16px; font-weight: 700; fill: {ACCENT}; }}
-  .lab {{ font-size: {fs}px; fill: {TEXT}; }}
-  .pct {{ font-size: {fs}px; font-weight: 600; fill: {MUTED}; }}
-  .fx {{ opacity: 0; animation: rise .6s ease-out forwards; }}
-  #bar {{ animation: grow 1.1s cubic-bezier(.4,0,.2,1) forwards; transform-origin: {PAD}px 0; }}
-  @keyframes rise {{ from {{ opacity: 0; transform: translateY(8px); }}
-                     to {{ opacity: 1; transform: translateY(0); }} }}
+  .num {{ font-size: {num_size}px; font-weight: 700; fill: {ACCENT}; }}
+  .cap {{ font-size: 10px; font-weight: 600; fill: {TEXT}; letter-spacing: 1.2px; }}
+  .sub {{ font-size: 9px; fill: {MUTED}; }}
+  .lg  {{ font-size: {fs}px; fill: {TEXT}; }}
+  .pc  {{ font-size: {fs}px; font-weight: 600; fill: {MUTED}; }}
+  .ttl {{ font-size: 10px; font-weight: 600; fill: {MUTED}; letter-spacing: 1.2px; }}
+  .fx  {{ opacity: 0; animation: rise .55s ease-out forwards; }}
+  #bar {{ animation: grow 1s cubic-bezier(.4,0,.2,1) forwards; transform-origin: {SPLIT}px 0; }}
+  @keyframes rise {{ from {{ opacity:0; transform: translateY(6px); }}
+                     to {{ opacity:1; transform: translateY(0); }} }}
   @keyframes grow {{ from {{ transform: scaleX(0); }} to {{ transform: scaleX(1); }} }}
 </style>
-<rect x="0.5" y="0.5" width="{W - 1}" height="{h - 1}" rx="12" fill="{BG}" stroke="{BORDER}"/>
-<text x="{PAD}" y="36" class="ttl">Languages</text>
-<clipPath id="r"><rect x="{PAD}" y="56" width="{inner}" height="12" rx="6"/></clipPath>
+<rect x="0.5" y="0.5" width="{W - 1}" height="{H - 1}" rx="10" fill="{BG}" stroke="{BORDER}"/>
+<g class="fx">
+  <text x="{PAD}" y="48" class="num">{num}</text>
+  <text x="{PAD}" y="66" class="cap">TOTAL CONTRIBUTIONS</text>
+  <text x="{PAD}" y="80" class="sub">public + private &#183; since 2022</text>
+</g>
+<line x1="{SPLIT - 22}" y1="20" x2="{SPLIT - 22}" y2="{H - 20}" stroke="{BORDER}"/>
+<text x="{SPLIT}" y="24" class="ttl">LANGUAGES</text>
+<clipPath id="r"><rect x="{SPLIT}" y="34" width="{inner}" height="9" rx="4.5"/></clipPath>
 <g clip-path="url(#r)" id="bar">{"".join(seg)}</g>
 {"".join(items)}
 </svg>"""
@@ -182,8 +166,7 @@ def main():
     if len(d["langs"]) >= len(load_snapshot().get("langs", [])):
         SNAPSHOT.write_text(json.dumps(
             {"langs": [list(x) for x in d["langs"]]}, indent=2) + "\n")
-    (OUT / "stats.svg").write_text(stats_card(d))
-    (OUT / "languages.svg").write_text(langs_card(d))
+    (OUT / "stats.svg").write_text(card(d))
     print(f"total_contributions={d['total']:,} langs={len(d['langs'])}")
 
 
