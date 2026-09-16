@@ -8,20 +8,14 @@
   .rv  { font-size: 17px; font-weight: 700; fill: #c9d1d9; }
   .pop { opacity: 0; transform-box: fill-box; transform-origin: center;
           animation: pop .45s cubic-bezier(.34,1.56,.64,1) forwards; }
-  #flame { transform-box: fill-box; transform-origin: 50% 90%;
-            animation: flicker 1.8s ease-in-out infinite; }
-  #glow  { transform-box: fill-box; transform-origin: 50% 90%;
-            animation: glow 1.8s ease-in-out infinite; }
+  #flame { transform-box: fill-box; transform-origin: 50% 90%; animation: flicker 1.8s ease-in-out infinite; }
   @keyframes pop { 0% { opacity:0; transform: scale(.4); }
                     100% { opacity:1; transform: scale(1); } }
   @keyframes flicker { 0%,100% { transform: scale(1) rotate(0deg); }
                         35% { transform: scale(1.08,1.13) rotate(-2deg); }
                         70% { transform: scale(.96,1.04) rotate(2deg); } }
-  @keyframes glow { 0%,100% { opacity:.25; transform: scale(1); }
-                     50% { opacity:.5; transform: scale(1.18); } }
 </style>
 <rect x="0.5" y="0.5" width="879" height="91" rx="10" fill="#0d1117" stroke="#30363d"/>
-<ellipse id="glow" cx="44" cy="50" rx="20" ry="22" fill="#ff9600" opacity=".3"/>
 <path id="flame" d="M44,22 c7,11 15,15 15,26 a15,15 0 0 1 -30,0 c0,-6 3,-10 6,-14 c1,4 3,6 5,7 c-2,-8 0,-15 4,-19 z"
       fill="#ff9600"/>
 <path d="M44,44 c3,4 6,6 6,11 a6,6 0 0 1 -12,0 c0,-4 3,-7 6,-11 z" fill="#ffd21e"/>

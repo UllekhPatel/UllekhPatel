@@ -250,6 +250,16 @@ def streak_card(d):
     while text_w(cur, num_size, 700) > 90:
         num_size -= 2
 
+    # A broken streak (nothing today or yesterday) freezes the flame: the
+    # flicker stops and the colours go cold, so a dead streak never looks live.
+    alive = cur > 0
+    flame_fill = FLAME if alive else "#3d434b"
+    core_fill = "#ffd21e" if alive else "#4a5058"
+    num_fill = FLAME if alive else MUTED
+    flame_anim = ("animation: flicker 1.8s ease-in-out infinite;"
+                  if alive else "animation: none;")
+
+    ring_on = FLAME if alive else "#3d434b"
     rings, rx = [], 330.0
     gap = 46
     for i, (iso, n) in enumerate(last7):
@@ -258,8 +268,8 @@ def streak_card(d):
         on = n > 0
         rings.append(
             f'<g class="pop" style="animation-delay:{0.06 * i + 0.25:.2f}s">'
-            f'<circle cx="{rx:.0f}" cy="44" r="13" fill="{FLAME if on else "none"}" '
-            f'stroke="{FLAME if on else BORDER}" stroke-width="2"/>'
+            f'<circle cx="{rx:.0f}" cy="44" r="13" fill="{ring_on if on else "none"}" '
+            f'stroke="{ring_on if on else BORDER}" stroke-width="2"/>'
             + (f'<path d="M{rx - 5:.0f},44 l3.5,4 l6.5,-8" fill="none" stroke="{BG}" '
                f'stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>'
                if on else "")
@@ -271,30 +281,24 @@ def streak_card(d):
     return f"""<svg xmlns="http://www.w3.org/2000/svg" width="{SW}" height="{SH}" viewBox="0 0 {SW} {SH}" role="img" aria-label="{cur} day contribution streak, longest {best} days">
 <style>
   text {{ font-family: 'Segoe UI', Ubuntu, Helvetica, sans-serif; }}
-  .num {{ font-size: {num_size}px; font-weight: 700; fill: {FLAME}; }}
+  .num {{ font-size: {num_size}px; font-weight: 700; fill: {num_fill}; }}
   .cap {{ font-size: 10px; font-weight: 600; fill: {TEXT}; letter-spacing: 1.2px; }}
   .dl  {{ font-size: 10px; font-weight: 600; fill: {MUTED}; }}
   .rt  {{ font-size: 10px; font-weight: 600; fill: {MUTED}; letter-spacing: 1.2px; }}
   .rv  {{ font-size: 17px; font-weight: 700; fill: {TEXT}; }}
   .pop {{ opacity: 0; transform-box: fill-box; transform-origin: center;
           animation: pop .45s cubic-bezier(.34,1.56,.64,1) forwards; }}
-  #flame {{ transform-box: fill-box; transform-origin: 50% 90%;
-            animation: flicker 1.8s ease-in-out infinite; }}
-  #glow  {{ transform-box: fill-box; transform-origin: 50% 90%;
-            animation: glow 1.8s ease-in-out infinite; }}
+  #flame {{ transform-box: fill-box; transform-origin: 50% 90%; {flame_anim} }}
   @keyframes pop {{ 0% {{ opacity:0; transform: scale(.4); }}
                     100% {{ opacity:1; transform: scale(1); }} }}
   @keyframes flicker {{ 0%,100% {{ transform: scale(1) rotate(0deg); }}
                         35% {{ transform: scale(1.08,1.13) rotate(-2deg); }}
                         70% {{ transform: scale(.96,1.04) rotate(2deg); }} }}
-  @keyframes glow {{ 0%,100% {{ opacity:.25; transform: scale(1); }}
-                     50% {{ opacity:.5; transform: scale(1.18); }} }}
 </style>
 <rect x="0.5" y="0.5" width="{SW - 1}" height="{SH - 1}" rx="10" fill="{BG}" stroke="{BORDER}"/>
-<ellipse id="glow" cx="{SP + 20}" cy="50" rx="20" ry="22" fill="{FLAME}" opacity=".3"/>
 <path id="flame" d="M{SP + 20},22 c7,11 15,15 15,26 a15,15 0 0 1 -30,0 c0,-6 3,-10 6,-14 c1,4 3,6 5,7 c-2,-8 0,-15 4,-19 z"
-      fill="{FLAME}"/>
-<path d="M{SP + 20},44 c3,4 6,6 6,11 a6,6 0 0 1 -12,0 c0,-4 3,-7 6,-11 z" fill="#ffd21e"/>
+      fill="{flame_fill}"/>
+<path d="M{SP + 20},44 c3,4 6,6 6,11 a6,6 0 0 1 -12,0 c0,-4 3,-7 6,-11 z" fill="{core_fill}"/>
 <text x="{SP + 48}" y="52" class="num">{cur}</text>
 <text x="{SP + 48}" y="68" class="cap">DAY STREAK</text>
 <line x1="300" y1="22" x2="300" y2="{SH - 22}" stroke="{BORDER}"/>
