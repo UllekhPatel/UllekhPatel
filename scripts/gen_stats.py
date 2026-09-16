@@ -19,7 +19,7 @@ BORDER = "#30363d"
 ACCENT = "#a371f7"
 TEXT = "#c9d1d9"
 MUTED = "#8b949e"
-CARD_H = 280  # both cards share a height so they align side by side
+CARD_H = 250  # both cards share a height so they align side by side
 
 LANG_COLORS = {
     "TypeScript": "#3178c6", "Python": "#3572A5", "JavaScript": "#f1e05a",
@@ -107,8 +107,6 @@ def stats_card(d):
         ("Private Commits", f"{d['commits_private']:,}", False),
         ("Public Commits", f"{d['commits_public']:,}", False),
         ("Pull Requests", f"{d['prs']:,}", False),
-        ("Repositories", f"{d['repos']:,}", False),
-        ("Followers", f"{d['followers']:,}", False),
     ]
     h = CARD_H
     parts = []

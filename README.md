@@ -9,8 +9,8 @@
 <h3 align="center">⚡ All-Time Stats</h3>
 
 <p align="center">
-  <img height="280" src="https://raw.githubusercontent.com/UllekhPatel/UllekhPatel/main/assets/stats.svg" alt="All-time stats including private repositories" />
-  <img height="280" src="https://raw.githubusercontent.com/UllekhPatel/UllekhPatel/main/assets/languages.svg" alt="Top languages across all repositories" />
+  <img height="250" src="https://raw.githubusercontent.com/UllekhPatel/UllekhPatel/main/assets/stats.svg" alt="All-time stats including private repositories" />
+  <img height="250" src="https://raw.githubusercontent.com/UllekhPatel/UllekhPatel/main/assets/languages.svg" alt="Top languages across all repositories" />
 </p>
 
 <br />
