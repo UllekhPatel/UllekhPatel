@@ -78,7 +78,16 @@ def fetch_data():
     if sum(v for _, v in snap_langs) > sum(v for _, v in langs):
         langs = snap_langs
 
-    return {"total": total, "langs": langs}
+    cal = gh_graphql(
+        '{ user(login:"%s"){ contributionsCollection{ contributionCalendar{ '
+        "totalContributions weeks{ contributionDays{ contributionCount date } } "
+        "} } } }" % USER
+    )["user"]["contributionsCollection"]["contributionCalendar"]
+    weeks = [sum(d["contributionCount"] for d in w["contributionDays"])
+             for w in cal["weeks"]]
+
+    return {"total": total, "langs": langs,
+            "year_total": cal["totalContributions"], "weeks": weeks}
 
 
 W = 880   # one compact band: contributions on the left, languages on the right
@@ -149,13 +158,58 @@ def card(d):
 <g class="fx">
   <text x="{PAD}" y="48" class="num">{num}</text>
   <text x="{PAD}" y="66" class="cap">TOTAL CONTRIBUTIONS</text>
-  <text x="{PAD}" y="80" class="sub">public + private &#183; since 2022</text>
+  <text x="{PAD}" y="80" class="sub">all-time &#183; public + private</text>
 </g>
 <line x1="{SPLIT - 22}" y1="20" x2="{SPLIT - 22}" y2="{H - 20}" stroke="{BORDER}"/>
 <text x="{SPLIT}" y="24" class="ttl">LANGUAGES</text>
 <clipPath id="r"><rect x="{SPLIT}" y="34" width="{inner}" height="9" rx="4.5"/></clipPath>
 <g clip-path="url(#r)" id="bar">{"".join(seg)}</g>
 {"".join(items)}
+</svg>"""
+
+
+def graph_card(d):
+    """Weekly contribution volume over the trailing year, as an animated area
+    chart. Mirrors the window GitHub's own profile graph uses."""
+    GW, GH_, GP = 880, 118, 24
+    weeks = d["weeks"] or [0]
+    peak = max(weeks) or 1
+    plot_w, plot_h = GW - 2 * GP, 56
+    base_y = GH_ - 26
+    step = plot_w / max(len(weeks) - 1, 1)
+
+    pts = [(GP + i * step, base_y - (v / peak) * plot_h)
+           for i, v in enumerate(weeks)]
+    line = " ".join(f"{x:.1f},{y:.1f}" for x, y in pts)
+    area = f"{GP},{base_y} " + line + f" {GP + plot_w},{base_y}"
+
+    return f"""<svg xmlns="http://www.w3.org/2000/svg" width="{GW}" height="{GH_}" viewBox="0 0 {GW} {GH_}" role="img" aria-label="Weekly contributions over the last year, {d['year_total']} total">
+<style>
+  text {{ font-family: 'Segoe UI', Ubuntu, Helvetica, sans-serif; }}
+  .ttl {{ font-size: 10px; font-weight: 600; fill: {MUTED}; letter-spacing: 1.2px; }}
+  .val {{ font-size: 13px; font-weight: 700; fill: {ACCENT}; }}
+  .ax  {{ font-size: 9px; fill: {MUTED}; }}
+  #ln {{ stroke-dasharray: 3000; stroke-dashoffset: 3000;
+         animation: draw 2s ease-out .2s forwards; }}
+  #ar {{ opacity: 0; animation: fade .9s ease-out 1.1s forwards; }}
+  @keyframes draw {{ to {{ stroke-dashoffset: 0; }} }}
+  @keyframes fade {{ to {{ opacity: 1; }} }}
+</style>
+<defs>
+  <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="{ACCENT}" stop-opacity="0.45"/>
+    <stop offset="100%" stop-color="{ACCENT}" stop-opacity="0"/>
+  </linearGradient>
+</defs>
+<rect x="0.5" y="0.5" width="{GW - 1}" height="{GH_ - 1}" rx="10" fill="{BG}" stroke="{BORDER}"/>
+<text x="{GP}" y="24" class="ttl">CONTRIBUTIONS &#183; LAST 12 MONTHS</text>
+<text x="{GW - GP}" y="24" text-anchor="end" class="val">{d['year_total']:,}</text>
+<polygon id="ar" points="{area}" fill="url(#g)"/>
+<polyline id="ln" points="{line}" fill="none" stroke="{ACCENT}" stroke-width="2"
+          stroke-linejoin="round" stroke-linecap="round"/>
+<line x1="{GP}" y1="{base_y}" x2="{GW - GP}" y2="{base_y}" stroke="{BORDER}"/>
+<text x="{GP}" y="{GH_ - 10}" class="ax">12 mo ago</text>
+<text x="{GW - GP}" y="{GH_ - 10}" text-anchor="end" class="ax">peak {peak}/wk</text>
 </svg>"""
 
 
@@ -167,7 +221,9 @@ def main():
         SNAPSHOT.write_text(json.dumps(
             {"langs": [list(x) for x in d["langs"]]}, indent=2) + "\n")
     (OUT / "stats.svg").write_text(card(d))
-    print(f"total_contributions={d['total']:,} langs={len(d['langs'])}")
+    (OUT / "graph.svg").write_text(graph_card(d))
+    print(f"all_time={d['total']:,} last_year={d['year_total']:,} "
+          f"weeks={len(d['weeks'])} langs={len(d['langs'])}")
 
 
 if __name__ == "__main__":

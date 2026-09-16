@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img height="130" src="https://streak-stats.demolab.com/?user=UllekhPatel&hide_border=true&border_radius=10&background=0d1117&stroke=30363d&ring=a371f7&fire=f78166&currStreakNum=c9d1d9&sideNums=c9d1d9&currStreakLabel=a371f7&sideLabels=8b949e&dates=8b949e" alt="Contribution streak" />
+  <img width="84%" src="https://raw.githubusercontent.com/UllekhPatel/UllekhPatel/main/assets/graph.svg" alt="Weekly contributions over the last 12 months" />
 </p>
 
 <p align="center">
