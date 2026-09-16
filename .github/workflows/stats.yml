@@ -34,11 +34,11 @@ jobs:
             git fetch origin main
             git reset --hard origin/main
             python3 scripts/gen_stats.py
-            if [ -z "$(git status --porcelain assets)" ]; then
+            if [ -z "$(git status --porcelain assets README.md)" ]; then
               echo "No change."
               exit 0
             fi
-            git add assets
+            git add assets README.md
             git commit -m "chore: refresh profile cards [skip ci]"
             if git push; then
               echo "Pushed on attempt $attempt."

@@ -6,7 +6,9 @@ queries. Re-run with `python3 scripts/gen_stats.py` after `gh auth login`
 to refresh the numbers, then commit the regenerated SVGs.
 """
 
+import hashlib
 import json
+import re
 import subprocess
 from pathlib import Path
 
@@ -354,6 +356,25 @@ def graph_card(d):
 </svg>"""
 
 
+def stamp_readme():
+    """Append a content hash to each card URL in the README.
+
+    GitHub proxies README images through its own cache, so regenerating a card
+    in place is not enough - the URL has to change or viewers keep seeing the
+    old picture. Hashing the file means the URL changes exactly when the image
+    does, and not otherwise."""
+    readme = Path(__file__).resolve().parent.parent / "README.md"
+    text = readme.read_text()
+    for svg in sorted(OUT.glob("*.svg")):
+        digest = hashlib.sha256(svg.read_bytes()).hexdigest()[:8]
+        text = re.sub(
+            r"(assets/%s\.svg)(\?v=[0-9a-f]+)?" % re.escape(svg.stem),
+            r"\1?v=" + digest,
+            text,
+        )
+    readme.write_text(text)
+
+
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
     d = fetch_data()
@@ -364,6 +385,7 @@ def main():
     (OUT / "stats.svg").write_text(card(d))
     (OUT / "graph.svg").write_text(graph_card(d))
     (OUT / "streak.svg").write_text(streak_card(d))
+    stamp_readme()
     print(f"all_time={d['total']:,} last_year={d['year_total']:,} "
           f"weeks={len(d['weeks'])} langs={len(d['langs'])} "
           f"excluded_self_commits={d['excluded']} "
