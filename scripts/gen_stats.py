@@ -12,12 +12,14 @@ from pathlib import Path
 
 USER = "UllekhPatel"
 OUT = Path(__file__).resolve().parent.parent / "assets"
+SNAPSHOT = OUT / "snapshot.json"
 
 BG = "#0d1117"
 BORDER = "#30363d"
 ACCENT = "#a371f7"
 TEXT = "#c9d1d9"
 MUTED = "#8b949e"
+CARD_H = 280  # both cards share a height so they align side by side
 
 LANG_COLORS = {
     "TypeScript": "#3178c6", "Python": "#3572A5", "JavaScript": "#f1e05a",
@@ -34,21 +36,33 @@ def gh_graphql(query):
     return json.loads(out)["data"]
 
 
+def load_snapshot():
+    """Values a repo-scoped Action token cannot see, captured from a run
+    authenticated as the user. Refresh with `python3 scripts/gen_stats.py`
+    locally after `gh auth login`."""
+    if SNAPSHOT.exists():
+        return json.loads(SNAPSHOT.read_text())
+    return {}
+
+
 def fetch_data():
-    years = range(2022, 2027)
-    commits_public = commits_private = prs = issues = 0
-    for y in years:
+    """Commit counts (public + private) are readable by any token because the
+    account has 'include private contributions on my profile' enabled. Repo
+    count and language bytes are NOT: a repo-scoped token sees public repos
+    only, so those fall back to the committed snapshot."""
+    snap = load_snapshot()
+    commits_public = commits_private = prs_year = 0
+    for y in range(2022, 2027):
         q = (
             '{ user(login:"%s"){ contributionsCollection('
             'from:"%d-01-01T00:00:00Z", to:"%d-12-31T23:59:59Z"){ '
             "totalCommitContributions restrictedContributionsCount "
-            "totalPullRequestContributions totalIssueContributions } } }"
+            "totalPullRequestContributions } } }"
         ) % (USER, y, y)
         c = gh_graphql(q)["user"]["contributionsCollection"]
         commits_public += c["totalCommitContributions"]
         commits_private += c["restrictedContributionsCount"]
-        prs += c["totalPullRequestContributions"]
-        issues += c["totalIssueContributions"]
+        prs_year += c["totalPullRequestContributions"]
 
     u = gh_graphql(
         '{ user(login:"%s"){ followers{totalCount} '
@@ -68,12 +82,20 @@ def fetch_data():
             totals[e["node"]["name"]] = totals.get(e["node"]["name"], 0) + e["size"]
     langs = sorted(totals.items(), key=lambda kv: -kv[1])[:6]
 
+    # Keep whichever view is richer: an owner-authenticated run sees private
+    # repos and beats the snapshot; a tokenless Action run does not.
+    repos = max(u["repositories"]["totalCount"], snap.get("repos", 0))
+    prs = max(u["pullRequests"]["totalCount"], snap.get("prs", 0))
+    snap_langs = [tuple(x) for x in snap.get("langs", [])]
+    if sum(s for _, s in snap_langs) > sum(s for _, s in langs):
+        langs = snap_langs
+
     return {
         "commits_total": commits_public + commits_private,
         "commits_private": commits_private,
         "commits_public": commits_public,
-        "prs": u["pullRequests"]["totalCount"],
-        "repos": u["repositories"]["totalCount"],
+        "prs": prs,
+        "repos": repos,
         "followers": u["followers"]["totalCount"],
         "langs": langs,
     }
@@ -88,7 +110,7 @@ def stats_card(d):
         ("Repositories", f"{d['repos']:,}", False),
         ("Followers", f"{d['followers']:,}", False),
     ]
-    h = 40 + len(rows) * 34 + 26
+    h = CARD_H
     parts = []
     for i, (label, value, hero) in enumerate(rows):
         y = 78 + i * 34
@@ -122,7 +144,7 @@ def stats_card(d):
 
 def langs_card(d):
     total = sum(s for _, s in d["langs"])
-    h = 40 + len(d["langs"]) * 30 + 30
+    h = CARD_H
     bars, x = [], 26.0
     seg = []
     for name, size in d["langs"]:
@@ -166,6 +188,10 @@ def langs_card(d):
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
     d = fetch_data()
+    # Persist the owner-only view so tokenless Action runs can reuse it.
+    SNAPSHOT.write_text(json.dumps(
+        {"repos": d["repos"], "prs": d["prs"],
+         "langs": [list(x) for x in d["langs"]]}, indent=2) + "\n")
     (OUT / "stats.svg").write_text(stats_card(d))
     (OUT / "languages.svg").write_text(langs_card(d))
     print(f"commits={d['commits_total']:,} (private={d['commits_private']:,}) "

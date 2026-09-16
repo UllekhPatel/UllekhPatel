@@ -1,0 +1,40 @@
+name: Refresh stats cards
+
+on:
+  schedule:
+    - cron: "17 2 * * *"
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - scripts/gen_stats.py
+      - .github/workflows/stats.yml
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Regenerate cards
+        # The built-in GITHUB_TOKEN is enough: commit counts (public and
+        # private) are readable because the profile exposes private
+        # contributions. Repo count and language bytes fall back to
+        # assets/snapshot.json, which a local owner-authenticated run refreshes.
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 scripts/gen_stats.py
+
+      - name: Commit if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if [ -n "$(git status --porcelain assets)" ]; then
+            git add assets
+            git commit -m "chore: refresh stats cards [skip ci]"
+            git push
+          else
+            echo "No change."
+          fi

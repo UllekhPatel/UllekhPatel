@@ -6,15 +6,27 @@
 
 <br />
 
-<h3 align="center">⚡ The Numbers</h3>
+<h3 align="center">⚡ All-Time Stats</h3>
 
 <p align="center">
-  <img height="290" src="https://raw.githubusercontent.com/UllekhPatel/UllekhPatel/main/assets/stats.svg" alt="All-time stats including private repositories" />
-  <img height="290" src="https://raw.githubusercontent.com/UllekhPatel/UllekhPatel/main/assets/languages.svg" alt="Top languages across all repositories" />
+  <img height="280" src="https://raw.githubusercontent.com/UllekhPatel/UllekhPatel/main/assets/stats.svg" alt="All-time stats including private repositories" />
+  <img height="280" src="https://raw.githubusercontent.com/UllekhPatel/UllekhPatel/main/assets/languages.svg" alt="Top languages across all repositories" />
 </p>
 
+<br />
+
+<h3 align="center">🔥 Streak</h3>
+
 <p align="center">
-  <img src="https://streak-stats.demolab.com/?user=UllekhPatel&hide_border=true&border_radius=12&background=0d1117&stroke=30363d&ring=a371f7&fire=f78166&currStreakNum=c9d1d9&sideNums=c9d1d9&currStreakLabel=a371f7&sideLabels=8b949e&dates=8b949e" alt="Streak" />
+  <img src="https://streak-stats.demolab.com/?user=UllekhPatel&hide_border=true&border_radius=12&background=0d1117&stroke=30363d&ring=a371f7&fire=f78166&currStreakNum=c9d1d9&sideNums=c9d1d9&currStreakLabel=a371f7&sideLabels=8b949e&dates=8b949e" alt="Contribution streak" />
+</p>
+
+<br />
+
+<h3 align="center">🕐 When I Code</h3>
+
+<p align="center">
+  <img height="200" src="https://github-profile-summary-cards.vercel.app/api/cards/productive-time?username=UllekhPatel&utcOffset=5.5&theme=github_dark" alt="Productive time of day" />
 </p>
 
 <br />
@@ -28,15 +40,5 @@
     <img src="https://raw.githubusercontent.com/UllekhPatel/UllekhPatel/output/github-snake.svg" alt="Contribution snake animation" />
   </picture>
 </p>
-
-<br />
-
-<h3 align="center">🕐 When I Code</h3>
-
-<p align="center">
-  <img height="200" src="https://github-profile-summary-cards.vercel.app/api/cards/productive-time?username=UllekhPatel&utcOffset=5.5&theme=github_dark" alt="Productive time of day" />
-</p>
-
-<br />
 
 <img src="https://capsule-render.vercel.app/api?type=waving&color=0:2f81f7,50:a371f7,100:6f42c1&height=120&section=footer" width="100%" alt="" />
