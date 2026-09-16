@@ -17,6 +17,8 @@ SNAPSHOT = OUT / "snapshot.json"
 
 BG = "#0d1117"
 BORDER = "#30363d"
+FLAME = "#ff9600"   # Duolingo-style streak orange
+FLAME_DIM = "#3a2a14"
 ACCENT = "#a371f7"
 TEXT = "#c9d1d9"
 MUTED = "#8b949e"
@@ -76,6 +78,28 @@ def self_repo_commits():
     return by_day
 
 
+def streaks(days):
+    """Current and longest run of consecutive active days.
+
+    The current streak tolerates an inactive today: like Duolingo, the day
+    isn't over yet, so a streak ending yesterday still counts as live.
+    """
+    best = run = 0
+    for _, n in days:
+        run = run + 1 if n > 0 else 0
+        best = max(best, run)
+
+    cur = 0
+    for i in range(len(days) - 1, -1, -1):
+        if days[i][1] > 0:
+            cur += 1
+        elif i == len(days) - 1:
+            continue          # today not logged yet; keep looking back
+        else:
+            break
+    return {"streak": cur, "best": best, "last7": days[-7:]}
+
+
 def fetch_data():
     """Total contributions already include private activity, because the
     account exposes private contributions on its profile - so a repo-scoped
@@ -120,18 +144,21 @@ def fetch_data():
         "totalContributions weeks{ contributionDays{ contributionCount date } } "
         "} } } }" % USER
     )["user"]["contributionsCollection"]["contributionCalendar"]
-    weeks, year_self = [], 0
+    weeks, year_self, days = [], 0, []
     for w in cal["weeks"]:
         wk = 0
         for day in w["contributionDays"]:
             adj = max(day["contributionCount"] - self_days.get(day["date"], 0), 0)
             year_self += day["contributionCount"] - adj
             wk += adj
+            days.append((day["date"], adj))
         weeks.append(wk)
+    days.sort()
 
     return {"total": total, "langs": langs,
             "year_total": cal["totalContributions"] - year_self,
-            "weeks": weeks, "excluded": self_total}
+            "weeks": weeks, "excluded": self_total,
+            "days": days, **streaks(days)}
 
 
 W = 880   # one compact band: contributions on the left, languages on the right
@@ -212,6 +239,72 @@ def card(d):
 </svg>"""
 
 
+def streak_card(d):
+    """Duolingo-style streak band: flickering flame, day count, and the
+    trailing week as filled/hollow rings that pop in one by one."""
+    SW, SH, SP = 880, 92, 24
+    from datetime import date as _date
+    cur, best, last7 = d["streak"], d["best"], d["last7"]
+
+    num_size = 30
+    while text_w(cur, num_size, 700) > 90:
+        num_size -= 2
+
+    rings, rx = [], 330.0
+    gap = 46
+    for i, (iso, n) in enumerate(last7):
+        y, m, dd = (int(v) for v in iso.split("-"))
+        letter = "MTWTFSS"[_date(y, m, dd).weekday()]
+        on = n > 0
+        rings.append(
+            f'<g class="pop" style="animation-delay:{0.06 * i + 0.25:.2f}s">'
+            f'<circle cx="{rx:.0f}" cy="44" r="13" fill="{FLAME if on else "none"}" '
+            f'stroke="{FLAME if on else BORDER}" stroke-width="2"/>'
+            + (f'<path d="M{rx - 5:.0f},44 l3.5,4 l6.5,-8" fill="none" stroke="{BG}" '
+               f'stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>'
+               if on else "")
+            + f'<text x="{rx:.0f}" y="74" text-anchor="middle" class="dl">{letter}</text>'
+            "</g>"
+        )
+        rx += gap
+
+    return f"""<svg xmlns="http://www.w3.org/2000/svg" width="{SW}" height="{SH}" viewBox="0 0 {SW} {SH}" role="img" aria-label="{cur} day contribution streak, longest {best} days">
+<style>
+  text {{ font-family: 'Segoe UI', Ubuntu, Helvetica, sans-serif; }}
+  .num {{ font-size: {num_size}px; font-weight: 700; fill: {FLAME}; }}
+  .cap {{ font-size: 10px; font-weight: 600; fill: {TEXT}; letter-spacing: 1.2px; }}
+  .dl  {{ font-size: 10px; font-weight: 600; fill: {MUTED}; }}
+  .rt  {{ font-size: 10px; font-weight: 600; fill: {MUTED}; letter-spacing: 1.2px; }}
+  .rv  {{ font-size: 17px; font-weight: 700; fill: {TEXT}; }}
+  .pop {{ opacity: 0; transform-box: fill-box; transform-origin: center;
+          animation: pop .45s cubic-bezier(.34,1.56,.64,1) forwards; }}
+  #flame {{ transform-box: fill-box; transform-origin: 50% 90%;
+            animation: flicker 1.8s ease-in-out infinite; }}
+  #glow  {{ transform-box: fill-box; transform-origin: 50% 90%;
+            animation: glow 1.8s ease-in-out infinite; }}
+  @keyframes pop {{ 0% {{ opacity:0; transform: scale(.4); }}
+                    100% {{ opacity:1; transform: scale(1); }} }}
+  @keyframes flicker {{ 0%,100% {{ transform: scale(1) rotate(0deg); }}
+                        35% {{ transform: scale(1.08,1.13) rotate(-2deg); }}
+                        70% {{ transform: scale(.96,1.04) rotate(2deg); }} }}
+  @keyframes glow {{ 0%,100% {{ opacity:.25; transform: scale(1); }}
+                     50% {{ opacity:.5; transform: scale(1.18); }} }}
+</style>
+<rect x="0.5" y="0.5" width="{SW - 1}" height="{SH - 1}" rx="10" fill="{BG}" stroke="{BORDER}"/>
+<ellipse id="glow" cx="{SP + 20}" cy="50" rx="20" ry="22" fill="{FLAME}" opacity=".3"/>
+<path id="flame" d="M{SP + 20},22 c7,11 15,15 15,26 a15,15 0 0 1 -30,0 c0,-6 3,-10 6,-14 c1,4 3,6 5,7 c-2,-8 0,-15 4,-19 z"
+      fill="{FLAME}"/>
+<path d="M{SP + 20},44 c3,4 6,6 6,11 a6,6 0 0 1 -12,0 c0,-4 3,-7 6,-11 z" fill="#ffd21e"/>
+<text x="{SP + 48}" y="52" class="num">{cur}</text>
+<text x="{SP + 48}" y="68" class="cap">DAY STREAK</text>
+<line x1="300" y1="22" x2="300" y2="{SH - 22}" stroke="{BORDER}"/>
+{"".join(rings)}
+<line x1="{SW - 190}" y1="22" x2="{SW - 190}" y2="{SH - 22}" stroke="{BORDER}"/>
+<text x="{SW - SP}" y="44" text-anchor="end" class="rt">LONGEST</text>
+<text x="{SW - SP}" y="68" text-anchor="end" class="rv">{best} days</text>
+</svg>"""
+
+
 def graph_card(d):
     """Weekly contribution volume over the trailing year, as an animated area
     chart. Mirrors the window GitHub's own profile graph uses."""
@@ -266,9 +359,11 @@ def main():
             {"langs": [list(x) for x in d["langs"]]}, indent=2) + "\n")
     (OUT / "stats.svg").write_text(card(d))
     (OUT / "graph.svg").write_text(graph_card(d))
+    (OUT / "streak.svg").write_text(streak_card(d))
     print(f"all_time={d['total']:,} last_year={d['year_total']:,} "
           f"weeks={len(d['weeks'])} langs={len(d['langs'])} "
-          f"excluded_self_commits={d['excluded']}")
+          f"excluded_self_commits={d['excluded']} "
+          f"streak={d['streak']} best={d['best']}")
 
 
 if __name__ == "__main__":
