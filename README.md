@@ -9,8 +9,8 @@
 <h3 align="center">⚡ The Numbers</h3>
 
 <p align="center">
-  <img height="170" src="https://gh-readme-stats.vercel.app/api?username=UllekhPatel&show_icons=true&include_all_commits=true&count_private=true&hide_border=true&border_radius=12&title_color=a371f7&icon_color=a371f7&bg_color=0d1117&text_color=c9d1d9&ring_color=a371f7" alt="Stats" />
-  <img height="170" src="https://gh-readme-stats.vercel.app/api/top-langs/?username=UllekhPatel&layout=compact&langs_count=8&hide_border=true&border_radius=12&title_color=a371f7&bg_color=0d1117&text_color=c9d1d9" alt="Top languages" />
+  <img height="290" src="https://raw.githubusercontent.com/UllekhPatel/UllekhPatel/main/assets/stats.svg" alt="All-time stats including private repositories" />
+  <img height="290" src="https://raw.githubusercontent.com/UllekhPatel/UllekhPatel/main/assets/languages.svg" alt="Top languages across all repositories" />
 </p>
 
 <p align="center">
@@ -31,20 +31,12 @@
 
 <br />
 
-<h3 align="center">📈 The Breakdown</h3>
+<h3 align="center">🕐 When I Code</h3>
 
 <p align="center">
-  <img src="https://github-profile-summary-cards.vercel.app/api/cards/profile-details?username=UllekhPatel&theme=github_dark" width="94%" alt="Profile details" />
+  <img height="200" src="https://github-profile-summary-cards.vercel.app/api/cards/productive-time?username=UllekhPatel&utcOffset=5.5&theme=github_dark" alt="Productive time of day" />
 </p>
 
-<p align="center">
-  <img height="200" src="https://github-profile-summary-cards.vercel.app/api/cards/repos-per-language?username=UllekhPatel&theme=github_dark" alt="Repos per language" />
-  <img height="200" src="https://github-profile-summary-cards.vercel.app/api/cards/most-commit-language?username=UllekhPatel&theme=github_dark" alt="Most commit language" />
-</p>
-
-<p align="center">
-  <img height="200" src="https://github-profile-summary-cards.vercel.app/api/cards/stats?username=UllekhPatel&theme=github_dark" alt="Stats" />
-  <img height="200" src="https://github-profile-summary-cards.vercel.app/api/cards/productive-time?username=UllekhPatel&utcOffset=5.5&theme=github_dark" alt="Productive time" />
-</p>
+<br />
 
 <img src="https://capsule-render.vercel.app/api?type=waving&color=0:2f81f7,50:a371f7,100:6f42c1&height=120&section=footer" width="100%" alt="" />
