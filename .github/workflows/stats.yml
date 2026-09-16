@@ -21,21 +21,34 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
-      - name: Regenerate cards
+      - name: Regenerate and commit
+        # Regenerate *after* syncing to origin, and retry, so a concurrent push
+        # to main cannot make this job fail or clobber someone else's commit.
+        # Output is a pure function of the API, so regenerating post-sync is safe.
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: python3 scripts/gen_stats.py
-      - name: Commit if changed
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          if [ -n "$(git status --porcelain assets)" ]; then
+          for attempt in 1 2 3; do
+            git fetch origin main
+            git reset --hard origin/main
+            python3 scripts/gen_stats.py
+            if [ -z "$(git status --porcelain assets)" ]; then
+              echo "No change."
+              exit 0
+            fi
             git add assets
             git commit -m "chore: refresh profile cards [skip ci]"
-            git push
-          else
-            echo "No change."
-          fi
+            if git push; then
+              echo "Pushed on attempt $attempt."
+              exit 0
+            fi
+            echo "Push raced; retrying."
+            sleep 5
+          done
+          echo "Could not push after 3 attempts." >&2
+          exit 1
 
   snake:
     runs-on: ubuntu-latest
