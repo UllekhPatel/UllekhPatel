@@ -2,7 +2,10 @@ name: Refresh profile
 
 on:
   schedule:
-    - cron: "17 2 * * *"
+    # 18:30 UTC = 00:00 IST, the author's midnight. Deliberately off the top of
+    # the hour and out of the 00-03 UTC band, which is the most oversubscribed
+    # window on Actions - GitHub delays or drops scheduled runs there.
+    - cron: "30 18 * * *"
   workflow_dispatch:
   push:
     branches: [main]
