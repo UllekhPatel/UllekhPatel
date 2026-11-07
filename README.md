@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img width="84%" src="https://raw.githubusercontent.com/UllekhPatel/UllekhPatel/main/assets/streak.svg?v=6ebb669b" alt="Contribution streak" />
+  <img width="84%" src="https://raw.githubusercontent.com/UllekhPatel/UllekhPatel/main/assets/streak.svg?v=60374fbb" alt="Contribution streak" />
 </p>
 
 <p align="center">
