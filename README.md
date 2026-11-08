@@ -9,11 +9,11 @@
 </p>
 
 <p align="center">
-  <img width="84%" src="https://raw.githubusercontent.com/UllekhPatel/UllekhPatel/main/assets/streak.svg?v=60374fbb" alt="Contribution streak" />
+  <img width="84%" src="https://raw.githubusercontent.com/UllekhPatel/UllekhPatel/main/assets/streak.svg?v=b1fbb433" alt="Contribution streak" />
 </p>
 
 <p align="center">
-  <img width="84%" src="https://raw.githubusercontent.com/UllekhPatel/UllekhPatel/main/assets/graph.svg?v=20ac1149" alt="Weekly contributions over the last 12 months" />
+  <img width="84%" src="https://raw.githubusercontent.com/UllekhPatel/UllekhPatel/main/assets/graph.svg?v=509bab33" alt="Weekly contributions over the last 12 months" />
 </p>
 
 <p align="center">
