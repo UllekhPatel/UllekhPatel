@@ -5,15 +5,15 @@
 </p>
 
 <p align="center">
-  <img width="84%" src="https://raw.githubusercontent.com/UllekhPatel/UllekhPatel/main/assets/stats.svg?v=0b698afd" alt="Total contributions and top languages" />
+  <img width="84%" src="https://raw.githubusercontent.com/UllekhPatel/UllekhPatel/main/assets/stats.svg?v=dadf60ee" alt="Total contributions and top languages" />
 </p>
 
 <p align="center">
-  <img width="84%" src="https://raw.githubusercontent.com/UllekhPatel/UllekhPatel/main/assets/streak.svg?v=560e16d7" alt="Contribution streak" />
+  <img width="84%" src="https://raw.githubusercontent.com/UllekhPatel/UllekhPatel/main/assets/streak.svg?v=a84e7095" alt="Contribution streak" />
 </p>
 
 <p align="center">
-  <img width="84%" src="https://raw.githubusercontent.com/UllekhPatel/UllekhPatel/main/assets/graph.svg?v=0fe62fb0" alt="Weekly contributions over the last 12 months" />
+  <img width="84%" src="https://raw.githubusercontent.com/UllekhPatel/UllekhPatel/main/assets/graph.svg?v=c35fedbd" alt="Weekly contributions over the last 12 months" />
 </p>
 
 <p align="center">
